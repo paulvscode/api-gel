@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dernière publication gel des avoirs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dernière publication des gels d'avoirs</h1>
+  <button id="loadBtn">Charger la date</button>
+
+  <div class="result" id="result">
+    Cliquez sur le bouton pour charger les données.
+  </div>
+
+  <button id="loadFileBtn" style="margin-top: 2rem;">Charger le fichier JSON</button>
+
+  <div class="result" id="jsonResult">
+    Cliquez sur le bouton pour voir le contenu du fichier JSON.
+  </div>
+
+  <script>
+    document.getElementById('loadBtn').addEventListener('click', () => {
+      const resultDiv = document.getElementById('result');
+
+      resultDiv.textContent = 'Chargement...';
+
+      fetch('http://localhost:3000/dernier-gel')
+        .then(res => res.json())
+        .then(data => {
+          resultDiv.innerHTML = `
+            ${data}
+          `;
+        })
+        .catch(err => {
+          console.error(err);
+          resultDiv.textContent = 'Erreur lors de la récupération des données.';
+        });
+    });
+
+    document.getElementById('loadFileBtn').addEventListener('click', () => {
+    const jsonDiv = document.getElementById('jsonResult');
+    jsonDiv.textContent = 'Chargement du fichier JSON...';
+
+    fetch('http://localhost:3000/dernier-fichier-json')
+        .then(res => res.json())
+        .then(data => {
+        jsonDiv.innerHTML = `
+            <strong>Contenu JSON reçu :</strong><br>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+        })
+        .catch(err => {
+        console.error(err);
+        jsonDiv.textContent = 'Erreur lors de la récupération du fichier JSON.';
+        });
+    });
+  </script>
+
+</body>
+</html>
