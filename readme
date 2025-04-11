@@ -1,0 +1,18 @@
+Serveur Express NodeJs pour faire des appels API.
+
+## Prérequis
+
+- [Node.js](https://nodejs.org) 
+- [npm](https://www.npmjs.com/) 
+- [Git](https://git-scm.com/) 
+
+## Lancer l'API en local
+
+1. Cloner le dépôt :
+   ```bash
+   git clone https://github.com/paulvscode/api-gel.git
+   cd api-gel
+
+2. npm install
+3. node index.js
+4. Ouvrir http://localhost:3000
