@@ -15,4 +15,5 @@ Serveur Express NodeJs pour faire des appels API.
 
 2. npm install
 3. node index.js
-4. Ouvrir http://localhost:3000
+4. Servir le html
+5. Ouvrir http://localhost:3000
