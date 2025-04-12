@@ -9,7 +9,6 @@ Serveur Express NodeJs pour faire des appels API.
 ## Lancer l'API en local
 
 1. Cloner le dépôt :
-   ```bash
    git clone https://github.com/paulvscode/api-gel.git
    cd api-gel
 
