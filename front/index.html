@@ -1,88 +1,60 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dernière publication gel des avoirs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Bootstrap CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .card {
-      margin-top: 2rem;
-    }
-    pre {
-      background-color: #f1f1f1;
-      padding: 1rem;
-      border-radius: 5px;
-      overflow-x: auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gel des avoir</title>
+    <style>
+        body { font-family: sans-serif; }
+        nav { background-color: #f2f2f2; padding: 10px; margin-bottom: 20px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        nav a:hover { color: blue; }
+        #result { margin-top: 20px; font-weight: bold; }
+        #jsonResult { margin-top: 20px; white-space: pre-wrap; }
+    </style>
 </head>
 <body>
+    <nav>
+        <a href="index.html">Accueil</a>
+        <a href="data.html">Voir les Données</a>
+    </nav>
 
-  <div class="container">
-    <h1 class="mt-5 mb-4 text-center">Dernière publication des gels d'avoirs</h1>
+    <h1>Gel des avoir</h1>
 
-    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-      <button id="loadBtn" class="btn btn-primary">📅 Charger la date</button>
-      <button id="loadFileBtn" class="btn btn-secondary">📂 Charger le fichier JSON</button>
-    </div>
+    <button onclick="fetchDate()">📅 Charger la date</button>
+    <p id="result"></p>
 
-    <div class="card shadow-sm" id="resultCard">
-      <div class="card-body">
-        <h5 class="card-title">Date de la dernière publication</h5>
-        <p id="result" class="card-text">Cliquez sur le bouton pour charger les données.</p>
-      </div>
-    </div>
+    <button onclick="fetchJson()">📂 Charger le fichier JSON</button>
+    <pre id="jsonResult"></pre>
 
-    <div class="card shadow-sm" id="jsonCard">
-      <div class="card-body">
-        <h5 class="card-title">Contenu JSON</h5>
-        <p id="jsonResult" class="card-text">Cliquez sur le bouton pour voir le contenu du fichier JSON.</p>
-      </div>
-    </div>
-  </div>
+    <script>
+        async function fetchDate() {
+            try {
+                const response = await fetch('http://localhost:3000/dernier-gel');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const date = await response.json();
+                document.getElementById('result').textContent = `Dernière date de publication : ${date}`;
+            } catch (error) {
+                console.error('Erreur lors de la récupération de la date:', error);
+                document.getElementById('result').textContent = 'Erreur lors de la récupération de la date.';
+            }
+        }
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    document.getElementById('loadBtn').addEventListener('click', () => {
-      const resultDiv = document.getElementById('result');
-      resultDiv.textContent = 'Chargement...';
-
-      fetch('http://localhost:3000/dernier-gel')
-        .then(res => res.json())
-        .then(data => {
-          resultDiv.innerHTML = `<strong>${data}</strong>`;
-        })
-        .catch(err => {
-          console.error(err);
-          resultDiv.textContent = '❌ Erreur lors de la récupération des données.';
-        });
-    });
-
-    document.getElementById('loadFileBtn').addEventListener('click', () => {
-      const jsonDiv = document.getElementById('jsonResult');
-      jsonDiv.textContent = 'Chargement du fichier JSON...';
-
-      fetch('http://localhost:3000/dernier-fichier-json')
-        .then(res => res.json())
-        .then(data => {
-          jsonDiv.innerHTML = `
-            <pre>${JSON.stringify(data, null, 2)}</pre>
-          `;
-        })
-        .catch(err => {
-          console.error(err);
-          jsonDiv.textContent = '❌ Erreur lors de la récupération du fichier JSON.';
-        });
-    });
-  </script>
-
+        async function fetchJson() {
+            try {
+                const response = await fetch('http://localhost:3000/dernier-fichier-json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Erreur lors de la récupération du JSON:', error);
+                document.getElementById('jsonResult').textContent = 'Erreur lors de la récupération du JSON.';
+            }
+        }
+    </script>
 </body>
 </html>

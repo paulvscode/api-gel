@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Données des Publications</title>
+    <style>
+        body { font-family: sans-serif; }
+        nav { background-color: #f2f2f2; padding: 10px; margin-bottom: 20px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        nav a:hover { color: blue; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Accueil</a>
+        <a href="data.html">Voir les Données</a>
+    </nav>
+
+    <h1>Données des Publications</h1> <span>Établi sur la base de données du gel des avoirs en date du {}</span>
+
+    <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Rechercher par nom...">
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Nature</th>
+                <th>Date de Naissance</th>
+                <th>Motifs</th>
+                <th>Fondement Juridique</th>
+                </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('http://localhost:3000/data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                populateTable(data);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données:', error);
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="6">Erreur lors du chargement des données.</td></tr>`;
+            }
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = ''; 
+
+            data.forEach(person => {
+                const row = tableBody.insertRow();
+                const nomCell = row.insertCell();
+                const prenomCell = row.insertCell();
+                const natureCell = row.insertCell();
+                const dateNaissanceCell = row.insertCell();
+                const motifsCell = row.insertCell();
+                const fondementCell = row.insertCell();
+
+                nomCell.textContent = person.nom || '';
+                prenomCell.textContent = person.prenom || '';
+                natureCell.textContent = person.nature || '';
+                dateNaissanceCell.textContent = person.date_de_naissance || '';
+                motifsCell.textContent = person.motifs || '';
+                fondementCell.textContent = person.fondement_juridique_label || '';
+            });
+        }
+
+        function searchTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("dataTable");
+            const tbody = table.getElementsByTagName("tbody")[0];
+            const rows = tbody.getElementsByTagName("tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                const nomTd = rows[i].getElementsByTagName("td")[0];
+                const prenomTd = rows[i].getElementsByTagName("td")[1];
+                const natureTd = rows[i].getElementsByTagName("td")[2];
+                const motifsTd = rows[i].getElementsByTagName("td")[4];
+                const fondementTd = rows[i].getElementsByTagName("td")[5];
+
+                if (nomTd || prenomTd || natureTd || motifsTd || fondementTd) {
+                    const nomText = nomTd ? nomTd.textContent.toUpperCase() : '';
+                    const prenomText = prenomTd ? prenomTd.textContent.toUpperCase() : '';
+                    const natureText = natureTd ? natureTd.textContent.toUpperCase() : '';
+                    const motifsText = motifsTd ? motifsTd.textContent.toUpperCase() : '';
+                    const fondementText = fondementTd ? fondementTd.textContent.toUpperCase() : '';
+
+                    if (nomText.includes(filter) || prenomText.includes(filter) || natureText.includes(filter) || motifsText.includes(filter) || fondementText.includes(filter)) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+
+        fetchData();
+    </script>
+</body>
+</html>
