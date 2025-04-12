@@ -148,6 +148,6 @@ app.get('/dernier-gel', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Proxy lancé sur http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Proxy lancé sur http://0.0.0.0:${PORT}`);
 });
