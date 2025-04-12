@@ -129,15 +129,22 @@ app.get('/data', async (req, res) => {
 });
 
 app.get('/dernier-gel', async (req, res) => {
-    const apiUrl = 'https://gels-avoirs.dgtresor.gouv.fr/ApiPublic/api/v1/publication/derniere-publication-date';
-
+    let connection;
     try {
-        const response = await fetch(apiUrl);
-        const date = await response.text();
-        res.json(date);
-    } catch (err) {
-        console.error('Erreur lors de la récupération des données :', err);
-        res.status(500).json({ error: 'Erreur serveur proxy' });
+        connection = await pool.getConnection();
+        const [rows] = await connection.execute(
+            'SELECT date_publication FROM publication ORDER BY id DESC LIMIT 1'
+        );
+        if (rows.length > 0) {
+            res.json(rows[0].date_publication); 
+        } else {
+            res.status(404).json({ error: 'Pas de publications.' });
+        }
+    } catch (error) {
+        console.error('Erreur dans la récupération de la dernière publication', error);
+        res.status(500).json({ error: 'Erreur 500.' });
+    } finally {
+        if (connection) connection.release();
     }
 });
 

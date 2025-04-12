@@ -1,60 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gel des avoir</title>
-    <style>
-        body { font-family: sans-serif; }
-        nav { background-color: #f2f2f2; padding: 10px; margin-bottom: 20px; }
-        nav a { margin-right: 15px; text-decoration: none; color: #333; }
-        nav a:hover { color: blue; }
-        #result { margin-top: 20px; font-weight: bold; }
-        #jsonResult { margin-top: 20px; white-space: pre-wrap; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gel des avoir</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <nav>
-        <a href="index.html">Accueil</a>
-        <a href="data.html">Voir les Données</a>
-    </nav>
+  <nav class="navbar navbar-expand-lg bg-light mb-4">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">Gel des Avoirs</a>
+      <div>
+        <a class="nav-link d-inline" href="index.html">Accueil</a>
+        <a class="nav-link d-inline" href="data.html">Voir les Données</a>
+      </div>
+    </div>
+  </nav>
 
-    <h1>Gel des avoir</h1>
+  <div class="container">
+    <h1 class="mb-4">Gel des avoir</h1>
 
-    <button onclick="fetchDate()">📅 Charger la date</button>
-    <p id="result"></p>
+    <div class="mb-3">
+      <button class="btn btn-primary" onclick="fetchDate()">📅 Charger la date</button>
+      <p id="result" class="mt-3 fw-semibold"></p>
+    </div>
 
-    <button onclick="fetchJson()">📂 Charger le fichier JSON</button>
-    <pre id="jsonResult"></pre>
+    <div>
+      <button class="btn btn-secondary" onclick="fetchJson()">📂 Charger le fichier JSON</button>
+      <pre id="jsonResult" class="bg-light border p-3 mt-3 rounded"></pre>
+    </div>
+  </div>
 
-    <script>
-        async function fetchDate() {
-            try {
-                const response = await fetch('http://localhost:3000/dernier-gel');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const date = await response.json();
-                document.getElementById('result').textContent = `Dernière date de publication : ${date}`;
-            } catch (error) {
-                console.error('Erreur lors de la récupération de la date:', error);
-                document.getElementById('result').textContent = 'Erreur lors de la récupération de la date.';
-            }
-        }
+  <script>
+    async function fetchDate() {
+      try {
+        const response = await fetch('http://localhost:3000/dernier-gel');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const date = await response.json();
+        document.getElementById('result').textContent = `Dernière date de publication : ${date}`;
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la date:', error);
+        document.getElementById('result').textContent = 'Erreur lors de la récupération de la date.';
+      }
+    }
 
-        async function fetchJson() {
-            try {
-                const response = await fetch('http://localhost:3000/dernier-fichier-json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
-            } catch (error) {
-                console.error('Erreur lors de la récupération du JSON:', error);
-                document.getElementById('jsonResult').textContent = 'Erreur lors de la récupération du JSON.';
-            }
-        }
-    </script>
+    async function fetchJson() {
+      try {
+        const response = await fetch('http://localhost:3000/dernier-fichier-json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du JSON:', error);
+        document.getElementById('jsonResult').textContent = 'Erreur lors de la récupération du JSON.';
+      }
+    }
+  </script>
 </body>
 </html>
