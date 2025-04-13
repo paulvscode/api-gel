@@ -22,6 +22,7 @@ const pool = mysql.createPool({
 
 async function insertPublicationData(publicationData) {
     let connection;
+    let skippedCount = 0;
     try {
         connection = await pool.getConnection();
 
@@ -32,34 +33,37 @@ async function insertPublicationData(publicationData) {
         const publicationId = publicationResult.insertId;
 
         for (const personDetail of publicationData.PublicationDetail) {
+            // Check if the id_registre already exists
+            const [existing] = await connection.execute(
+                'SELECT id FROM person WHERE id_registre = ?',
+                [personDetail.IdRegistre]
+            );
+
+            if (existing.length > 0) {
+                skippedCount++;
+                continue; // Skip this person
+            }
+
             const prenomDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'PRENOM');
-            const prenomValue = prenomDetail && prenomDetail.Valeur && prenomDetail.Valeur[0] && prenomDetail.Valeur[0].Prenom;
+            const prenomValue = prenomDetail?.Valeur?.[0]?.Prenom;
             const prenom = prenomValue || null;
 
             const sexeDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'SEXE');
-            const sexeValue = sexeDetail && sexeDetail.Valeur && sexeDetail.Valeur[0] && sexeDetail.Valeur[0].Sexe;
+            const sexeValue = sexeDetail?.Valeur?.[0]?.Sexe;
             const sexe = sexeValue || null;
 
             const dateNaissanceObj = personDetail.RegistreDetail.find(item => item.TypeChamp === 'DATE_DE_NAISSANCE')?.Valeur?.[0];
-            const dateNaissance = dateNaissanceObj ? `${dateNaissanceObj.Annee}-${String(dateNaissanceObj.Mois).padStart(2, '0')}-${String(dateNaissanceObj.Jour).padStart(2, '0')}` : null;
+            const dateNaissance = dateNaissanceObj
+                ? `${dateNaissanceObj.Annee}-${String(dateNaissanceObj.Mois).padStart(2, '0')}-${String(dateNaissanceObj.Jour).padStart(2, '0')}`
+                : null;
 
             const lieuNaissanceDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'LIEU_DE_NAISSANCE');
-            const lieuNaissanceValue = lieuNaissanceDetail && lieuNaissanceDetail.Valeur && lieuNaissanceDetail.Valeur[0] && lieuNaissanceDetail.Valeur[0].Lieu;
-            const lieuNaissance = lieuNaissanceValue || null;
-            const paysNaissanceValue = lieuNaissanceDetail && lieuNaissanceDetail.Valeur && lieuNaissanceDetail.Valeur[0] && lieuNaissanceDetail.Valeur[0].Pays;
-            const paysNaissance = paysNaissanceValue || null;
+            const lieuNaissance = lieuNaissanceDetail?.Valeur?.[0]?.Lieu || null;
+            const paysNaissance = lieuNaissanceDetail?.Valeur?.[0]?.Pays || null;
 
-            const titreDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'TITRE');
-            const titreValue = titreDetail && titreDetail.Valeur && titreDetail.Valeur[0] && titreDetail.Valeur[0].Titre;
-            const titre = titreValue || null;
-
-            const motifsDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'MOTIFS');
-            const motifsValue = motifsDetail && motifsDetail.Valeur && motifsDetail.Valeur[0] && motifsDetail.Valeur[0].Motifs;
-            const motifs = motifsValue || null;
-
-            const fondementJuridiqueDetail = personDetail.RegistreDetail.find(item => item.TypeChamp === 'FONDEMENT_JURIDIQUE');
-            const fondementJuridiqueLabelValue = fondementJuridiqueDetail && fondementJuridiqueDetail.Valeur && fondementJuridiqueDetail.Valeur[0] && fondementJuridiqueDetail.Valeur[0].FondementJuridiqueLabel;
-            const fondementJuridiqueLabel = fondementJuridiqueLabelValue || null;
+            const titre = personDetail.RegistreDetail.find(item => item.TypeChamp === 'TITRE')?.Valeur?.[0]?.Titre || null;
+            const motifs = personDetail.RegistreDetail.find(item => item.TypeChamp === 'MOTIFS')?.Valeur?.[0]?.Motifs || null;
+            const fondementJuridiqueLabel = personDetail.RegistreDetail.find(item => item.TypeChamp === 'FONDEMENT_JURIDIQUE')?.Valeur?.[0]?.FondementJuridiqueLabel || null;
 
             await connection.execute(
                 'INSERT INTO person (publication_id, id_registre, nature, nom, prenom, sexe, date_de_naissance, lieu_de_naissance, pays_naissance, titre, motifs, fondement_juridique_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -79,7 +83,9 @@ async function insertPublicationData(publicationData) {
                 ]
             );
         }
+
         console.log('Data inserted into the database.');
+        console.log(`Total persons skipped (already existing): ${skippedCount}`);
         return true;
     } catch (error) {
         console.error('Error inserting data:', error);
@@ -88,6 +94,7 @@ async function insertPublicationData(publicationData) {
         if (connection) connection.release();
     }
 }
+
 
 app.get('/dernier-fichier-json', async (req, res) => {
     const apiUrl = 'https://gels-avoirs.dgtresor.gouv.fr/ApiPublic/api/v1/publication/derniere-publication-fichier-json';
