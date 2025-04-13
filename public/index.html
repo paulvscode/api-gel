@@ -34,7 +34,7 @@
   <script>
     async function fetchDate() {
       try {
-        const response = await fetch('http://localhost:3000/dernier-gel');
+        const response = await fetch('http://192.168.1.94:3000/dernier-gel');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const date = await response.json();
         document.getElementById('result').textContent = `Dernière date de publication : ${date}`;
@@ -46,7 +46,7 @@
 
     async function fetchJson() {
       try {
-        const response = await fetch('http://localhost:3000/dernier-fichier-json');
+        const response = await fetch('http://192.168.1.94:3000/dernier-fichier-json');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         document.getElementById('jsonResult').textContent = JSON.stringify(data, null, 2);
