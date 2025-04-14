@@ -214,28 +214,56 @@
         data.push(rowData);
       });
 
-      if (typeof pdf.autoTable === 'function') {
-        pdf.autoTable({
-          head: [headers],
-          body: data,
-        });
-        pdf.save('donnees_gel_filtrees.pdf');
-      } else {
-        console.error('jspdf-autotable plugin not loaded!');
-        alert('Erreur: Le plugin d\'export PDF n\'est pas chargé. Veuillez réessayer plus tard.');
+      const logoImg = new Image();
+      logoImg.onload = function () {
+        const logoWidth = 40; 
+        const logoHeight = (this.height / this.width) * logoWidth;
+        const xPosition = 10; 
+        const yPosition = 10; 
 
-        let y = 10;
-        const lineHeight = 7;
-        data.forEach(row => {
-          let x = 10;
-          row.forEach(cell => {
-            pdf.text(cell, x, y);
-            x += 30;
+        pdf.addImage(logoImg, 'PNG', xPosition, yPosition, logoWidth, logoHeight);
+
+        const tableStartY = yPosition + logoHeight + 10;
+
+        if (typeof pdf.autoTable === 'function') {
+          pdf.autoTable({
+            head: [headers],
+            body: data,
+            startY: tableStartY, 
           });
-          y += lineHeight;
-        });
-        pdf.save('donnees_gel_filtrees_basic.pdf');
-      }
+          pdf.save('donnees_gel_filtrees.pdf');
+        } else {
+          console.error('jspdf-autotable plugin not loaded!');
+          alert('Erreur: Le plugin d\'export PDF n\'est pas chargé. Veuillez réessayer plus tard.');
+          let y = tableStartY;
+          const lineHeight = 7;
+          data.forEach(row => {
+            let x = 10;
+            row.forEach(cell => {
+              pdf.text(cell, x, y);
+              x += 30;
+            });
+            y += lineHeight;
+          });
+          pdf.save('donnees_gel_filtrees_basic_with_logo.pdf');
+        }
+      };
+      logoImg.onerror = function () {
+        console.error('Error loading logo image:', logoImg.src);
+        alert('Erreur: Impossible de charger le logo pour le PDF.');
+        const tableStartY = 10;
+        if (typeof pdf.autoTable === 'function') {
+          pdf.autoTable({
+            head: [headers],
+            body: data,
+            startY: tableStartY,
+          });
+          pdf.save('donnees_gel_filtrees.pdf');
+        } else {
+          // todo
+        }
+      };
+      logoImg.src = '/images/logo.png'; 
     }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
