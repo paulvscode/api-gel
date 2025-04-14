@@ -11,15 +11,22 @@
     <div class="container">
       <a class="navbar-brand fw-bold" href="#">Gel des Avoirs</a>
       <div>
-        <a class="nav-link d-inline" href="index.html">Accueil</a>
-        <a class="nav-link d-inline" href="data.html">Voir les Données</a>
+        <a class="nav-link d-inline text-uppercase me-3" href="app.html">Accueil</a>
+        <a class="nav-link d-inline text-uppercase" href="data.html">Voir les Données</a>
       </div>
     </div>
   </nav>
 
   <div class="container">
-    <h1>Données des Publications</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1>Données des Publications</h1>
+      <button class="btn btn-info" onclick="checkForUpdates()">🔄 Vérifier les mises à jour</button>
+    </div>
     <p id="publicationDate" class="text-muted mb-4">Établi sur la base de données du gel des avoirs en date du {}</p>
+    <p id="updateStatus" class="mb-2"></p>
+    <div id="loadingUpdate" class="mt-2" style="display:none;">
+      <p>Mise à jour des données en cours... <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></p>
+    </div>
 
     <input type="text" id="searchInput" class="form-control mb-4" onkeyup="searchTable()" placeholder="🔍 Rechercher par nom..."/>
 
@@ -42,9 +49,79 @@
   </div>
 
   <script>
+    //const API_BASE_URL = 'http://192.168.1.94:3000';
+    const API_BASE_URL = "http://localhost:3000";
+
+    async function getLatestDatabaseDate() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/dernier-gel`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const date = await response.json();
+        return date;
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la date de la base de données:', error);
+        return null;
+      }
+    }
+
+    async function getLatestApiDate() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/dernier-gel`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la date de l\'API:', error);
+        return null;
+      }
+    }
+
+    async function fetchAndStoreJson() {
+      document.getElementById('loadingUpdate').style.display = 'block';
+      document.getElementById('updateStatus').textContent = '';
+      try {
+        const response = await fetch(`${API_BASE_URL}/dernier-fichier-json`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log('Mise à jour des données réussie:', result);
+        document.getElementById('updateStatus').innerHTML = '<span class="text-success">Base de données mise à jour avec succès. La page va se recharger.</span>';
+        setTimeout(() => {
+          window.location.reload(); 
+        }, 2000);
+      } catch (error) {
+        console.error('Erreur lors de la récupération et de l\'enregistrement du JSON:', error);
+        document.getElementById('updateStatus').innerHTML = '<span class="text-danger">Erreur lors de la mise à jour des données. Veuillez réessayer plus tard.</span>';
+        document.getElementById('loadingUpdate').style.display = 'none';
+      }
+    }
+
+    async function checkForUpdates() {
+      document.getElementById('updateStatus').textContent = 'Vérification des mises à jour...';
+      const dbDate = await getLatestDatabaseDate();
+      const apiDate = await getLatestApiDate();
+
+      if (dbDate && apiDate) {
+        if (dbDate < apiDate) {
+          document.getElementById('updateStatus').innerHTML = '<span class="text-warning">Une mise à jour est disponible. Mise à jour en cours...</span>';
+          await fetchAndStoreJson();
+        } else if (dbDate > apiDate) {
+          document.getElementById('updateStatus').innerHTML = '<span class="text-info">Votre base de données est plus récente que les données de l\'API.</span>';
+        } else {
+          document.getElementById('updateStatus').innerHTML = '<span class="text-success">Votre base de données est à jour.</span>';
+        }
+      } else {
+        document.getElementById('updateStatus').innerHTML = '<span class="text-danger">Impossible de vérifier les mises à jour. Veuillez réessayer.</span>';
+      }
+    }
+
     async function fetchData() {
       try {
-        const response = await fetch('http://192.168.1.94:3000/data');
+        const response = await fetch(`${API_BASE_URL}/data`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         populateTable(data);
@@ -56,7 +133,7 @@
 
     async function fetchPublicationDate() {
     try {
-        const response = await fetch('http://192.168.1.94:3000/dernier-gel');
+        const response = await fetch(`${API_BASE_URL}/dernier-gel`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

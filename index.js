@@ -2,6 +2,7 @@ const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const cors = require('cors');
 const mysql = require('mysql2/promise');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
@@ -154,6 +155,10 @@ app.get('/dernier-gel', async (req, res) => {
     } finally {
         if (connection) connection.release();
     }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
