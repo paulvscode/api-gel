@@ -24,7 +24,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Données des Publications</h1>
       <div>
-        <button class="btn btn-primary me-2" onclick="exportToPDF()">Exporter en PDF</button>
+        <button class="btn btn-primary me-2" onclick="exportToPDF(document.getElementById('searchInput').value)">Exporter en PDF</button>
         <button class="btn btn-info" onclick="checkForUpdates()">🔄 Vérifier les mises à jour</button>
       </div>
     </div>
@@ -52,13 +52,18 @@
         </thead>
         <tbody id="tableBody">
         </tbody>
+        <tfoot id="noResults">
+          <tr style="display:none;">
+            <td colspan="6" class="text-center">Pas de données correspondant à votre recherche.</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
 
   <script>
-    //const API_BASE_URL = 'http://192.168.1.94:3000';
-    const API_BASE_URL = "http://localhost:3000";
+    const API_BASE_URL = 'http://192.168.1.94:3000';
+    //const API_BASE_URL = "http://localhost:3000";
 
     async function getLatestDatabaseDate() {
       try {
@@ -170,6 +175,8 @@
           <td>${person.fondement_juridique_label || ''}</td>
         `;
       });
+      // Initially hide the "no results" row after populating the table
+      document.getElementById('noResults').rows[0].style.display = 'none';
     }
 
     function searchTable() {
@@ -177,8 +184,11 @@
       const filter = input.value.toUpperCase();
       const table = document.getElementById("dataTable");
       const rows = table.getElementsByTagName("tr");
+      const noResultsRow = document.getElementById("noResults").rows[0];
+      let found = false;
 
       for (let i = 1; i < rows.length; i++) {
+        if (i === 0) continue; // Skip the header row
         const cells = rows[i].getElementsByTagName("td");
         let match = false;
         if (cells.length > 1) {
@@ -190,17 +200,19 @@
             (prenomCell && prenomCell.textContent.toUpperCase().includes(filter))
           ) {
             match = true;
+            found = true;
           }
         }
-
         rows[i].style.display = match ? "" : "none";
       }
+
+      noResultsRow.style.display = found ? "none" : "";
     }
 
     fetchData();
     fetchPublicationDate();
 
-    function exportToPDF() {
+    function exportToPDF(searchTerm) {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
       const table = document.getElementById('dataTable');
@@ -220,53 +232,102 @@
         data.push(rowData);
       });
 
+      const noResultsRow = document.getElementById("noResults").rows[0];
+      const noResultsVisible = noResultsRow.style.display !== 'none';
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const titleText = "Recherche dans la base de données du gel des avoirs";
+      pdf.setFontSize(14);
+      const titleWidth = pdf.getTextWidth(titleText);
+      const titleCenterX = (pageWidth - titleWidth) / 2;
+
       const logoImg = new Image();
       logoImg.onload = function () {
         const logoWidth = 40;
         const logoHeight = (this.height / this.width) * logoWidth;
         const xPosition = 10;
         const yPosition = 10;
+        const titleY = yPosition + logoHeight + 10;
+        const tableStartY = titleY + 10;
 
         pdf.addImage(logoImg, 'PNG', xPosition, yPosition, logoWidth, logoHeight);
+        pdf.text(titleText, titleCenterX, titleY);
+        pdf.setFontSize(12);
 
-        const tableStartY = yPosition + logoHeight + 10;
-
-        if (typeof pdf.autoTable === 'function') {
-          pdf.autoTable({
-            head: [headers],
-            body: data,
-            startY: tableStartY,
-          });
-          pdf.save('donnees_gel_filtrees.pdf');
+        if (noResultsVisible) {
+          const noResultsText = `Pas de données correspondant à votre recherche: ${searchTerm}`;
+          const textWidth = pdf.getTextWidth(noResultsText);
+          const centerX = (pageWidth - textWidth) / 2;
+          pdf.text(noResultsText, centerX, tableStartY);
+          pdf.save('recherche_gel_avoirs.pdf');
         } else {
-          console.error('jspdf-autotable plugin not loaded!');
-          alert('Erreur: Le plugin d\'export PDF n\'est pas chargé. Veuillez réessayer plus tard.');
-          let y = tableStartY;
-          const lineHeight = 7;
-          data.forEach(row => {
-            let x = 10;
-            row.forEach(cell => {
-              pdf.text(cell, x, y);
-              x += 30;
+          if (typeof pdf.autoTable === 'function') {
+            pdf.autoTable({
+              head: [headers],
+              body: data,
+              startY: tableStartY,
             });
-            y += lineHeight;
-          });
-          pdf.save('donnees_gel_filtrees_basic_with_logo.pdf');
+            pdf.save('recherche_gel_avoirs.pdf');
+          } else {
+            console.error('jspdf-autotable plugin not loaded!');
+            alert('Erreur: Le plugin d\'export PDF n\'est pas chargé. Veuillez réessayer plus tard.');
+            let y = tableStartY;
+            const lineHeight = 7;
+            data.forEach(row => {
+              let x = 10;
+              row.forEach(cell => {
+                pdf.text(cell, x, y);
+                x += 30;
+              });
+              y += lineHeight;
+            });
+            pdf.save('recherche_gel_avoirs_basic_with_logo.pdf');
+          }
         }
       };
       logoImg.onerror = function () {
         console.error('Error loading logo image:', logoImg.src);
         alert('Erreur: Impossible de charger le logo pour le PDF.');
-        const tableStartY = 10;
-        if (typeof pdf.autoTable === 'function') {
-          pdf.autoTable({
-            head: [headers],
-            body: data,
-            startY: tableStartY,
-          });
-          pdf.save('donnees_gel_filtrees.pdf');
+        const titleY = 20;
+        const tableStartY = titleY + 10;
+
+        pdf.text(titleText, titleCenterX, titleY);
+        pdf.setFontSize(12);
+
+        if (noResultsVisible) {
+          const noResultsText = `Pas de données correspondant à votre recherche: ${searchTerm}`;
+          const textWidth = pdf.getTextWidth(noResultsText);
+          const centerX = (pageWidth - textWidth) / 2;
+          pdf.text(noResultsText, centerX, tableStartY);
+          pdf.save('recherche_gel_avoirs.pdf');
         } else {
-          // todo
+          if (typeof pdf.autoTable === 'function') {
+            pdf.autoTable({
+              head: [headers],
+              body: data,
+              startY: tableStartY,
+            });
+            pdf.save('recherche_gel_avoirs.pdf');
+          } else {
+            // Basic table generation without logo (implementation needed if autotable is missing)
+            let y = tableStartY;
+            const lineHeight = 7;
+            pdf.text("Données Gelées:", 10, y);
+            y += lineHeight;
+            headers.forEach((header, index) => {
+              pdf.text(header, 10 + index * 30, y);
+            });
+            y += lineHeight;
+            data.forEach(row => {
+              let x = 10;
+              row.forEach(cell => {
+                pdf.text(cell, x, y);
+                x += 30;
+              });
+              y += lineHeight;
+            });
+            pdf.save('recherche_gel_avoirs_basic.pdf');
+          }
         }
       };
       logoImg.src = '/images/logo.png';
