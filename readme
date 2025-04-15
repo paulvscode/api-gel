@@ -1,0 +1,35 @@
+# Gel des Avoirs - Application de Vérification des Données
+
+## Description
+
+This application provides a web interface to verify and display data related to asset freezes ("gel des avoirs"). It fetches data from a remote API, stores it in a local MySQL database, and presents it to the user. It also includes functionality to shut down the application and its associated Docker environment.
+
+## Table of Contents
+
+1. [Prerequisites](#1-prerequisites)  
+2. [Installation and Setup](#2-installation-and-setup)  
+3. [Starting the Application](#3-starting-the-application)  
+4. [Accessing the Application](#4-accessing-the-application)  
+5. [Stopping the Application](#5-stopping-the-application)  
+6. [Application Components](#6-application-components)  
+7. [API Endpoints](#7-api-endpoints-nodejs-backend)  
+8. [Database Schema](#8-database-schema)  
+9. [Configuration](#9-configuration)  
+10. [Logging](#10-logging)  
+11. [Error Handling](#11-error-handling)  
+12. [Security Considerations](#12-security-considerations)
+
+## 1. Prerequisites
+
+Before you can run this application, you need to have the following installed on your system:
+
+- **Docker:** [https://www.docker.com/get-started](https://www.docker.com/get-started)  
+- **Docker Compose:** Usually comes with Docker Desktop  
+- **Node.js and npm:** [https://nodejs.org/](https://nodejs.org/)
+
+## 2. Installation and Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository_url>
+   cd <application_directory>
