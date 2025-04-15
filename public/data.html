@@ -177,20 +177,19 @@
           <td>${person.fondement_juridique_label || ''}</td>
         `;
       });
-      // Initially hide the "no results" row after populating the table
       document.getElementById('noResults').rows[0].style.display = 'none';
     }
 
     function searchTable() {
       const input = document.getElementById("searchInput");
-      const filter = input.value.toUpperCase();
+      const filter = input.value.trim().toUpperCase();
       const table = document.getElementById("dataTable");
       const rows = table.getElementsByTagName("tr");
       const noResultsRow = document.getElementById("noResults").rows[0];
       let found = false;
 
       for (let i = 1; i < rows.length; i++) {
-        if (i === 0) continue; // Skip the header row
+        if (i === 0) continue;
         const cells = rows[i].getElementsByTagName("td");
         let match = false;
         if (cells.length > 1) {

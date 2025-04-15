@@ -4,13 +4,16 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: gels_avoirs_db
+      MYSQL_DATABASE: gels_avoirs_db # Création de la base de données
       MYSQL_USER: your_app_user
       MYSQL_PASSWORD: your_app_password
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 3
 volumes:
   db_data:

@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vérification des données</title>
   <link rel="icon" href="./images/favicon.ico" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg bg-light mb-4">
-        <div class="container">
-          <a class="navbar-brand fw-bold" href="#">Gel des Avoirs</a>
-          <div>
-            <a class="nav-link d-inline text-uppercase me-3" href="app.html">Accueil</a>
-            <a class="nav-link d-inline text-uppercase" href="data.html">Gel des avoirs</a>
-          </div>
-        </div>
-      </nav>
+  <nav class="navbar navbar-expand-lg bg-light mb-4">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">Gel des Avoirs</a>
+      <div>
+        <a class="nav-link d-inline text-uppercase me-3" href="app.html">Accueil</a>
+        <a class="nav-link d-inline text-uppercase me-3" href="data.html">Gel des avoirs</a>
+      </div>
+    </div>
+  </nav>
 
   <div class="container">
     <h1>Vérification des Données</h1>
@@ -25,7 +27,8 @@
       <button class="btn btn-primary" onclick="fetchAndRedirect()">Charger les Données depuis l'API</button>
     </div>
     <div id="loadingContainer" class="mt-4" style="display:none;">
-      <p>Chargement des données en cours... <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></p>
+      <p>Chargement des données en cours... <span class="spinner-border spinner-border-sm" role="status"
+          aria-hidden="true"></span></p>
     </div>
   </div>
 
@@ -41,7 +44,7 @@
         }
         const data = await response.json();
         if (data && data.length > 0) {
-          window.location.href = 'data.html'; 
+          window.location.href = 'data.html';
         } else {
           document.getElementById('noDataContainer').style.display = 'block';
         }
@@ -72,8 +75,8 @@
       }
     }
 
-    // Check for data when the page loads
     checkData();
   </script>
 </body>
+
 </html>

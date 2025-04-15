@@ -165,7 +165,7 @@ app.get('/bodacc', async (req, res) => {
         const bodaccData = await response.json();
 
         if (bodaccData && bodaccData.results && bodaccData.results.length > 0) {
-            res.json(bodaccData.results[0]); 
+            res.json(bodaccData.results[0]);
         } else {
             res.status(404).json({ error: 'Annonce non trouvée.' });
         }
