@@ -79,6 +79,12 @@ chmod +x start_app.sh
 ./start_app.sh
 ```
 
+Or
+
+```bash
+sh start_app.sh
+```
+
 This will:
 
 - Start the Docker environment
