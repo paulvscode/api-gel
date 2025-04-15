@@ -6,194 +6,30 @@ This application provides a web interface to verify and display data related to 
 
 ## Table of Contents
 
-1.  Prerequisites
-2.  Installation and Setup
-3.  Starting the Application
-4.  Accessing the Application
-5.  Stopping the Application
-6.  Application Components
-    * Backend (Node.js/Express)
-    * Database (MySQL)
-    * Frontend (HTML/JavaScript)
-    * Docker Compose
-    * Bash Script (`start_app.sh`)
-7.  API Endpoints
-    * `/dernier-fichier-json` (GET)
-    * `/data` (GET)
-    * `/dernier-gel` (GET)
-    * `/bodacc` (GET)
-    * `/shutdown` (POST)
-8.  Database Schema
-9.  Configuration
-10. Logging
-11. Error Handling
-12. Security Considerations
+1. [Prerequisites](#1-prerequisites)  
+2. [Installation and Setup](#2-installation-and-setup)  
+3. [Starting the Application](#3-starting-the-application)  
+4. [Accessing the Application](#4-accessing-the-application)  
+5. [Stopping the Application](#5-stopping-the-application)  
+6. [Application Components](#6-application-components)  
+7. [API Endpoints](#7-api-endpoints-nodejs-backend)  
+8. [Database Schema](#8-database-schema)  
+9. [Configuration](#9-configuration)  
+10. [Logging](#10-logging)  
+11. [Error Handling](#11-error-handling)  
+12. [Security Considerations](#12-security-considerations)
 
 ## 1. Prerequisites
 
 Before you can run this application, you need to have the following installed on your system:
 
-* **Docker:** For containerizing the MySQL database. You can download and install it from [https://www.docker.com/get-started](https://www.docker.com/get-started).
-* **Docker Compose:** For managing multi-container Docker applications. It usually comes bundled with Docker Desktop.
-* **Node.js and npm:** For running the backend server. You can download and install them from [https://nodejs.org/](https://nodejs.org/).
+- **Docker:** [https://www.docker.com/get-started](https://www.docker.com/get-started)  
+- **Docker Compose:** Usually comes with Docker Desktop  
+- **Node.js and npm:** [https://nodejs.org/](https://nodejs.org/)
 
 ## 2. Installation and Setup
 
-1.  **Clone the repository** (if you have the application code in a repository):
-    ```bash
-    git clone <repository_url>
-    cd <application_directory>
-    ```
-
-2.  **Create a `.env` file** (optional, for sensitive configuration - though currently the database credentials are in `index.js`). If you choose to use `.env`, store your MySQL credentials there:
-    ```
-    MYSQL_USER=your_app_user
-    MYSQL_PASSWORD=your_app_password
-    DATABASE_NAME=gels_avoirs_db
-    ```
-
-3.  **Install Node.js dependencies:** Navigate to the backend directory (where `package.json` is located) and run:
-    ```bash
-    npm install
-    ```
-
-4.  **Set up the Docker Compose environment:** Ensure you have a `docker-compose.yml` file in the root of your project (example content was discussed previously).
-
-5.  **Create the `public` directory:** In your backend directory (where `index.js` is), create a folder named `public` and place your frontend files (`app.html`, `data.html`, `404.html`, `images`, CSS, etc.) inside it.
-
-## 3. Starting the Application
-
-The application can be started using the provided bash script `start_app.sh`. This script will:
-
-1.  Start the Docker Compose environment, which includes the MySQL database.
-2.  Wait for the MySQL database container to be running and accessible.
-3.  Create the necessary database (`gels_avoirs_db`) and tables (`publication`, `person`) in the MySQL database using embedded SQL commands.
-4.  Start the Node.js backend server using `pm2` for process management.
-
-To start the application:
-
-1.  Navigate to the root directory of your application in the terminal.
-2.  Make the `start_app.sh` script executable (if you haven't already):
-    ```bash
-    chmod +x start_app.sh
-    ```
-3.  Run the script:
-    ```bash
-    ./start_app.sh
-    ```
-
-    The script will output logs to the terminal indicating the status of each step. Once it finishes, the Node.js server should be running in the background, managed by `pm2`.
-
-## 4. Accessing the Application
-
-Once the application is started, you can access the web interface in your browser by navigating to [http://IP:3000/]
-
-This should serve the `app.html` file, which provides links to the data verification page (`data.html`). 
-
-## 5. Stopping the Application
-
-The application can be stopped in two main ways: stopping the Node.js server and stopping the entire Docker Compose environment (including the database).
-
-### Stopping the Node.js Server (Managed by pm2)
-
-To stop the Node.js backend server managed by `pm2`:
-
-1.  Open a terminal.
-2.  Use the `pm2 stop` command followed by the application name (as defined in `start_app.sh`):
-    ```bash
-    pm2 stop my-gels-app
-    ```
-    This will stop the Node.js process but keep it in `pm2`'s process list, allowing you to restart it easily later.
-
-    To completely remove the application from `pm2`'s management list, use:
-    ```bash
-    pm2 delete my-gels-app
-    ```
-
-### Stopping the Docker Compose Environment
-
-To stop and remove the Docker containers (including the MySQL database):
-
-1.  Open a terminal.
-2.  Navigate to the root directory of your application (where the `docker-compose.yml` file is located).
-3.  Run the `docker-compose down` command:
-    ```bash
-    docker-compose down
-    ```
-    This will stop and remove the containers and networks defined in your `docker-compose.yml` file.
-
-### Stopping via the Web Interface
-
-The application also provides a button in the web interface ("Arrêter le Serveur") that sends a `POST` request to the `/shutdown` endpoint on the Node.js server. This endpoint is configured to:
-
-1.  Stop the Node.js application using `pm2 stop my-gels-app`.
-2.  Stop the Docker Compose environment using `docker-compose down`.
-3.  Finally, shut down the Node.js process itself.
-
-To use this method:
-
-1.  Open the application in your web browser (`http://localhost:3000`).
-2.  Navigate to the page containing the "Arrêter le Serveur" button (likely `app.html` or `data.html`).
-3.  Click the "Arrêter le Serveur" button and confirm the action when prompted.
-
-## 6. Application Components
-
-* **Backend (Node.js/Express):** Handles API requests, fetches data from the external API, interacts with the MySQL database, and serves the frontend files.
-* **Database (MySQL):** Stores the fetched data related to asset freezes.
-* **Frontend (HTML/JavaScript):** Provides the user interface for viewing the data and triggering actions like data loading and shutdown.
-* **Docker Compose:** Manages the MySQL database as a containerized service.
-* **Bash Script (`start_app.sh`):** Automates the process of starting the Docker environment, setting up the database, and launching the Node.js server.
-
-## 7. API Endpoints (Node.js Backend)
-
-* **`/dernier-fichier-json` (GET):** Fetches the latest JSON data from the external API and stores it in the local MySQL database.
-* **`/data` (GET):** Retrieves and returns the stored person data from the MySQL database.
-* **`/dernier-gel` (GET):** Fetches and returns the date of the latest publication from the database.
-* **`/bodacc` (GET):** Fetches and returns data from a specific BODACC announcement (currently hardcoded).
-* **`/shutdown` (POST):** Triggers the shutdown of the Node.js server (via `pm2`) and the Docker Compose environment.
-
-## 8. Database Schema
-
-The MySQL database (`gels_avoirs_db`) contains the following tables:
-
-* **`publication`:**
-    * `id` (INT AUTO_INCREMENT PRIMARY KEY)
-    * `date_publication` (DATETIME)
-    * `created_at` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-* **`person`:**
-    * `id` (INT AUTO_INCREMENT PRIMARY KEY)
-    * `publication_id` (INT, FOREIGN KEY referencing `publication.id`)
-    * `id_registre` (INT UNIQUE)
-    * `nature` (VARCHAR(255))
-    * `nom` (VARCHAR(255))
-    * `prenom` (VARCHAR(255))
-    * `sexe` (VARCHAR(10))
-    * `date_de_naissance` (VARCHAR(255))
-    * `lieu_de_naissance` (VARCHAR(255))
-    * `pays_naissance` (VARCHAR(255))
-    * `titre` (TEXT)
-    * `motifs` (TEXT)
-    * `fondement_juridique_label` (TEXT)
-    * `created_at` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-    * Indexes on `publication_id`, `nom`, and `prenom` for faster querying.
-
-## 9. Configuration
-
-Most configuration (database credentials, port) is currently within the `index.js` file. For more sensitive or environment-specific configurations, consider using environment variables or a dedicated configuration file (e.g., using a library like `dotenv`). The `API_BASE_URL` for the frontend is defined in the JavaScript code of the HTML files.
-
-## 10. Logging
-
-The application uses `console.log` and `console.error` for basic logging to the terminal, both on the backend and frontend. For a production environment, consider using a more robust logging library.
-
-## 11. Error Handling
-
-The application includes basic error handling for API requests and database operations, displaying error messages in the browser's console and on the web page. The `/shutdown` endpoint also includes error handling for the `pm2` and `docker-compose` commands.
-
-## 12. Security Considerations
-
-* **Database Credentials:** The database credentials are currently hardcoded in `index.js`. For production, it's highly recommended to use environment variables or a more secure method to manage these.
-* **Shutdown Endpoint:** The `/shutdown` endpoint allows stopping the server and Docker containers. In a production environment, this endpoint should be protected with authentication to prevent unauthorized access.
-* **Input Validation and Sanitization:** The application should implement proper input validation and sanitization to prevent security vulnerabilities like SQL injection, especially if there are any user input fields added in the future.
-* **CORS:** The application currently uses permissive CORS (`app.use(cors())`). In a production environment, you should configure CORS to only allow requests from trusted origins.
-
-This documentation provides a comprehensive overview of the application, including how to start and stop it. Remember to adapt the configuration and security measures for your specific deployment environment.
+1. **Clone the repository:**
+   ```bash
+   git clone <repository_url>
+   cd <application_directory>
