@@ -145,7 +145,7 @@ app.get('/dernier-gel', async (req, res) => {
             'SELECT date_publication FROM publication ORDER BY id DESC LIMIT 1'
         );
         if (rows.length > 0) {
-            res.json(rows[0].date_publication); 
+            res.json(rows[0].date_publication);
         } else {
             res.status(404).json({ error: 'Pas de publications.' });
         }
@@ -157,8 +157,31 @@ app.get('/dernier-gel', async (req, res) => {
     }
 });
 
+app.get('/bodacc', async (req, res) => {
+    const apiUrl = 'https://bodacc-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/annonces-commerciales/records?where=id="A20160093860"';
+
+    try {
+        const response = await fetch(apiUrl);
+        const bodaccData = await response.json();
+
+        if (bodaccData && bodaccData.results && bodaccData.results.length > 0) {
+            res.json(bodaccData.results[0]); 
+        } else {
+            res.status(404).json({ error: 'Annonce non trouvée.' });
+        }
+
+    } catch (err) {
+        console.error('Erreur récupération données BODACC :', err);
+        res.status(500).json({ error: 'Erreur serveur proxy (données BODACC)' });
+    }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'app.html'));
+});
+
+app.use((req, res, next) => {
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
