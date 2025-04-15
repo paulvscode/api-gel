@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Données gel</title>
+  <link rel="icon" href="./images/favicon.ico" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -24,7 +25,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>Données des Publications</h1>
       <div>
-        <button class="btn btn-primary me-2" onclick="exportToPDF(document.getElementById('searchInput').value)">Exporter en PDF</button>
+        <button class="btn btn-primary me-2"
+          onclick="exportToPDF(document.getElementById('searchInput').value)">Exporter en PDF</button>
         <button class="btn btn-info" onclick="checkForUpdates()">🔄 Vérifier les mises à jour</button>
       </div>
     </div>
@@ -212,7 +214,7 @@
     fetchData();
     fetchPublicationDate();
 
-    function exportToPDF(searchTerm) {
+    async function exportToPDF(searchTerm) {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
       const table = document.getElementById('dataTable');
@@ -236,43 +238,95 @@
       const noResultsVisible = noResultsRow.style.display !== 'none';
 
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const titleText = "Recherche dans la base de données du gel des avoirs";
+      const mainTitleText = "Interrogation GEL DES AVOIRS";
+      const commonFontSize = 10;
+      const verticalSpacing = 15;
+      const tableTitleColor = [5, 81, 140]; // RGB for #05518C
+      const tableHeaderBackgroundColor = [5, 81, 140]; // RGB for #05518C - for header background
+      const tableHeaderTextColor = [255, 255, 255]; // RGB for white - for header text
+      const tableTitleFontSize = 12;
+      const searchTermFontSize = 12; // Font size for "Résultats de la recherche" and the term
+      const tableTitleMarginTop = 15; // Space above the table title
+      const tableTitleText = "Résultats de la recherche :";
+      const searchTermSpacing = 6; // Space between title and search term
+      const searchTermVerticalOffset = 0; // Adjust for vertical alignment
       pdf.setFontSize(14);
-      const titleWidth = pdf.getTextWidth(titleText);
-      const titleCenterX = (pageWidth - titleWidth) / 2;
+      const mainTitleWidth = pdf.getTextWidth(mainTitleText);
+      const mainTitleCenterX = (pageWidth - mainTitleWidth) / 2;
 
       const logoImg = new Image();
-      logoImg.onload = function () {
-        const logoWidth = 40;
+      logoImg.onload = async function () {
+        const logoWidth = 100;
         const logoHeight = (this.height / this.width) * logoWidth;
-        const xPosition = 10;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const xPosition = (pageWidth - logoWidth) / 2;
         const yPosition = 10;
-        const titleY = yPosition + logoHeight + 10;
-        const tableStartY = titleY + 10;
+        let currentY = yPosition + logoHeight + verticalSpacing;
 
         pdf.addImage(logoImg, 'PNG', xPosition, yPosition, logoWidth, logoHeight);
-        pdf.text(titleText, titleCenterX, titleY);
-        pdf.setFontSize(12);
+        pdf.text(mainTitleText, mainTitleCenterX, currentY);
+        pdf.setFontSize(commonFontSize);
+        currentY += verticalSpacing;
+
+        const publicationDateISO = await getLatestDatabaseDate();
+        let formattedDate = '';
+        if (publicationDateISO) {
+          const publicationDate = new Date(publicationDateISO);
+          formattedDate = publicationDate.toLocaleDateString('fr-FR');
+        }
+        pdf.text(`Base de données du gel des avoirs en date du ${formattedDate}`, 10, currentY);
+        const tableStartY = currentY + verticalSpacing + tableTitleMarginTop;
+
+        pdf.setFontSize(searchTermFontSize); // Set font size for the title
+        pdf.setTextColor(...tableTitleColor); // Set the color for the table title
+        pdf.text(tableTitleText, 10, tableStartY - 15);
+        pdf.setTextColor(0); // Reset text color to black
+
+        if (searchTerm) {
+          pdf.setFontSize(searchTermFontSize); // Set font size for the search term
+          pdf.text(searchTerm, 10 + pdf.getTextWidth(tableTitleText) + searchTermSpacing, tableStartY - 15 + searchTermVerticalOffset);
+          pdf.setFontSize(12); // Reset font size for the table content
+        } else {
+          pdf.setFontSize(12); // Reset font size for the table content
+        }
+
+        const actualTableStartY = tableStartY;
 
         if (noResultsVisible) {
-          const noResultsText = `Pas de données correspondant à votre recherche: ${searchTerm}`;
+          const noResultsText = "Aucun registre correspondant à la recherche.";
           const textWidth = pdf.getTextWidth(noResultsText);
           const centerX = (pageWidth - textWidth) / 2;
-          pdf.text(noResultsText, centerX, tableStartY);
-          pdf.save('recherche_gel_avoirs.pdf');
+          pdf.text(noResultsText, centerX, actualTableStartY);
+          pdf.save('interrogation_gel_avoirs.pdf');
         } else {
           if (typeof pdf.autoTable === 'function') {
             pdf.autoTable({
-              head: [headers],
+              head: [headers.map(header => ({
+                content: header,
+                styles: { fillColor: tableHeaderBackgroundColor, textColor: tableHeaderTextColor }
+              }))],
               body: data,
-              startY: tableStartY,
+              startY: actualTableStartY,
             });
-            pdf.save('recherche_gel_avoirs.pdf');
+            pdf.save('interrogation_gel_avoirs.pdf');
           } else {
             console.error('jspdf-autotable plugin not loaded!');
             alert('Erreur: Le plugin d\'export PDF n\'est pas chargé. Veuillez réessayer plus tard.');
-            let y = tableStartY;
+            let y = actualTableStartY;
             const lineHeight = 7;
+            // Basic table header
+            pdf.setFillColor(...tableHeaderBackgroundColor);
+            pdf.setTextColor(...tableHeaderTextColor);
+            let startX = 10;
+            headers.forEach(header => {
+              pdf.rect(startX, y - lineHeight, 28, lineHeight, 'F'); // Draw filled rectangle for background
+              pdf.text(header, startX + 2, y - 2); // Adjust text position
+              startX += 30; // Adjust spacing as needed
+            });
+            pdf.setTextColor(0);
+            y += lineHeight + 2; // Add space between header and data
+            pdf.setFontSize(10);
+            // Basic table data
             data.forEach(row => {
               let x = 10;
               row.forEach(cell => {
@@ -281,43 +335,75 @@
               });
               y += lineHeight;
             });
-            pdf.save('recherche_gel_avoirs_basic_with_logo.pdf');
+            pdf.save('interrogation_gel_avoirs_basic_with_logo.pdf');
           }
         }
       };
-      logoImg.onerror = function () {
+      logoImg.onerror = async function () {
         console.error('Error loading logo image:', logoImg.src);
         alert('Erreur: Impossible de charger le logo pour le PDF.');
-        const titleY = 20;
-        const tableStartY = titleY + 10;
+        let currentY = 20;
+        const mainTitleY = currentY;
+        pdf.text(mainTitleText, mainTitleCenterX, mainTitleY);
+        pdf.setFontSize(commonFontSize);
+        currentY += verticalSpacing;
 
-        pdf.text(titleText, titleCenterX, titleY);
-        pdf.setFontSize(12);
+        const subtitleY = currentY;
+        const publicationDateISO = await getLatestDatabaseDate();
+        let formattedDate = '';
+        if (publicationDateISO) {
+          const publicationDate = new Date(publicationDateISO);
+          formattedDate = publicationDate.toLocaleDateString('fr-FR');
+        }
+        pdf.text(`Base de données du gel des avoirs en date du ${formattedDate}`, 10, subtitleY);
+        const tableStartY = currentY + verticalSpacing + tableTitleMarginTop;
+
+        pdf.setFontSize(searchTermFontSize); // Set font size for the title
+        pdf.setTextColor(...tableTitleColor); // Set the color for the table title
+        pdf.text(tableTitleText, 10, tableStartY - 15);
+        pdf.setTextColor(0); // Reset text color to black
+
+        if (searchTerm) {
+          pdf.setFontSize(searchTermFontSize); // Set font size for the search term
+          pdf.text(searchTerm, 10 + pdf.getTextWidth(tableTitleText) + searchTermSpacing, tableStartY - 15 + searchTermVerticalOffset);
+          pdf.setFontSize(12); // Reset font size for the table content
+        } else {
+          pdf.setFontSize(12); // Reset font size for the table content
+        }
+
+        const actualTableStartY = tableStartY;
 
         if (noResultsVisible) {
-          const noResultsText = `Pas de données correspondant à votre recherche: ${searchTerm}`;
+          const noResultsText = "Aucun registre correspondant à la recherche.";
           const textWidth = pdf.getTextWidth(noResultsText);
           const centerX = (pageWidth - textWidth) / 2;
-          pdf.text(noResultsText, centerX, tableStartY);
-          pdf.save('recherche_gel_avoirs.pdf');
+          pdf.text(noResultsText, centerX, actualTableStartY);
+          pdf.save('interrogation_gel_avoirs.pdf');
         } else {
           if (typeof pdf.autoTable === 'function') {
             pdf.autoTable({
-              head: [headers],
+              head: [headers.map(header => ({
+                content: header,
+                styles: { fillColor: tableHeaderBackgroundColor, textColor: tableHeaderTextColor }
+              }))],
               body: data,
-              startY: tableStartY,
+              startY: actualTableStartY,
             });
-            pdf.save('recherche_gel_avoirs.pdf');
+            pdf.save('interrogation_gel_avoirs.pdf');
           } else {
-            // Basic table generation without logo (implementation needed if autotable is missing)
-            let y = tableStartY;
-            const lineHeight = 7;
-            pdf.text("Données Gelées:", 10, y);
-            y += lineHeight;
-            headers.forEach((header, index) => {
-              pdf.text(header, 10 + index * 30, y);
+            // Basic table header
+            pdf.setFillColor(...tableHeaderBackgroundColor);
+            pdf.setTextColor(...tableHeaderTextColor);
+            let startX = 10;
+            headers.forEach(header => {
+              pdf.rect(startX, y - lineHeight, 28, lineHeight, 'F'); // Draw filled rectangle for background
+              pdf.text(header, startX + 2, y - 2); // Adjust text position
+              startX += 30; // Adjust spacing as needed
             });
-            y += lineHeight;
+            pdf.setTextColor(0);
+            y += lineHeight + 2; // Add space between header and data
+            pdf.setFontSize(10);
+            // Basic table data
             data.forEach(row => {
               let x = 10;
               row.forEach(cell => {
@@ -326,12 +412,13 @@
               });
               y += lineHeight;
             });
-            pdf.save('recherche_gel_avoirs_basic.pdf');
+            pdf.save('interrogation_gel_avoirs_basic.pdf');
           }
         }
       };
-      logoImg.src = '/images/logo.png';
+      logoImg.src = '/images/banniere.png';
     }
+
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </body>
